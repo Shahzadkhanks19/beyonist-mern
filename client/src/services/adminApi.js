@@ -7,7 +7,13 @@
 
 import { normalizeCmsMedia } from "../utils/productImagePath.js";
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
+// In production, route authenticated admin traffic through the storefront origin.
+// client/vercel.json proxies /api/* to the backend project, which keeps the
+// HttpOnly SameSite=Lax admin session cookie first-party and avoids cross-site
+// cookie restrictions between separate *.vercel.app project hostnames.
+const API_BASE = import.meta.env.PROD
+  ? "/api"
+  : (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
 
 /**
  * Implements the request operation used by this module.
@@ -170,7 +176,6 @@ export const updateAdminProfile = (data) => request("/admin/settings/profile", {
  * Updates admin password while preserving the surrounding domain invariants.
  */
 export const updateAdminPassword = (data) => request("/admin/settings/password", { method: "PATCH", body: JSON.stringify(data) });
-
 
 /**
  * Loads admin coupons data for the current flow.
