@@ -1,0 +1,24 @@
+# Beyonist
+
+Beyonist is an Indian skincare storefront focused on targeted formulas, daily rituals, product education and direct online purchasing.
+
+## Public pages
+
+- [Home](/)
+- [Shop](/shop)
+- [The Edit](/blogs)
+- [Our Story](/about)
+- [Contact](/contact)
+- [FAQ](/faq)
+- [Track Order](/track-order)
+- [Shipping Policy](/shipping-policy)
+- [Returns & Refunds](/return-refund-policy)
+- [Terms & Conditions](/terms-and-conditions)
+
+## Product information
+
+Product catalogue pages contain current descriptions, pricing, stock availability, usage guidance and product-specific details. Availability and pricing should be treated as dynamic.
+
+## Crawling
+
+Public catalogue, editorial and informational pages may be discovered through the site's sitemap and normal crawlable links. Account, checkout and administration routes are private application flows and are not intended as public content.

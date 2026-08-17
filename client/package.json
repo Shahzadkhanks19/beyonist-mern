@@ -1,0 +1,28 @@
+{
+  "name": "beyonist-client",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/generate-seo.mjs && vite build",
+    "preview": "vite preview",
+    "check:optimization": "node scripts/check-optimization.mjs",
+    "check:lighthouse": "node scripts/check-lighthouse.mjs",
+    "check": "npm run check:cleanup && npm run check:optimization && npm run check:lighthouse && npm run build",
+    "check:cleanup": "node scripts/check-cleanup.mjs"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "motion": "13.1.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-router-dom": "7.18.2",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.0.5",
+    "vite": "8.2.1"
+  }
+}

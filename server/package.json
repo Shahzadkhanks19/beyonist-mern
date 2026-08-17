@@ -1,0 +1,25 @@
+{
+  "name": "beyonist-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "seed:admin": "node src/scripts/seedAdmin.js",
+    "check:admin": "node src/scripts/checkAdmin.js",
+    "reset:admin": "node src/scripts/resetAdmin.js",
+    "check:admin-panel": "node src/scripts/checkAdminPanel.js",
+    "check:security": "node src/scripts/checkSecurity.js",
+    "check": "npm run check:syntax && npm run check:admin-panel && npm run check:security",
+    "check:syntax": "node src/scripts/checkSyntax.js",
+    "seed:products": "node src/scripts/seedProducts.js"
+  },
+  "dependencies": {
+    "cors": "2.8.6",
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "mongoose": "9.9.1",
+    "socket.io": "^4.8.1"
+  }
+}

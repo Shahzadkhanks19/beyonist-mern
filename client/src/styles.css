@@ -1,0 +1,172 @@
+@import "tailwindcss";
+
+html { scroll-behavior: smooth; }
+
+@keyframes footerMarquee {
+  to { transform: translateX(-50%); }
+}
+
+@keyframes heroProgress {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  [class*="footerMarquee"] { animation: none !important; }
+}
+
+/* Accessible keyboard focus without changing pointer interactions. */
+:focus-visible {
+  outline: 2px solid #cf1f2e;
+  outline-offset: 3px;
+}
+
+/* Prevent anchored content from hiding beneath the sticky header. */
+[id] { scroll-margin-top: 100px; }
+
+/* Respect operating-system motion preferences across CSS and JS-driven UI. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* Lighthouse/performance: skip layout/paint work for off-screen page sections until needed. */
+main > section:nth-of-type(n+3) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
+/* Preserve comfortable keyboard/touch interaction without changing compact visual controls. */
+@media (pointer: coarse) {
+  button, a, input, select, textarea { touch-action: manipulation; }
+}
+
+/* Avoid expensive decorative motion when users request reduced data as well as reduced motion. */
+@media (prefers-reduced-data: reduce) {
+  [class*="footerMarquee"] { animation: none !important; }
+}
+
+
+/* Public hero sizing contract:
+   Primary storefront heroes target ~540px on desktop so the full composition fits
+   comfortably below the sticky header. Tablet/mobile heroes are allowed to stack
+   naturally instead of forcing a viewport-height section. */
+
+
+/* --------------------------------------------------------------------------
+   BEYONIST STOREFRONT — ORIGINAL-INSPIRED PREMIUM SYSTEM
+   Evolves the first React storefront's red / warm-cream / yellow ecommerce
+   character without reverting to its old Bootstrap implementation.
+   -------------------------------------------------------------------------- */
+.beyonist-storefront {
+  --beyonist-red: #d13c3c;
+  --beyonist-red-dark: #b92f35;
+  --beyonist-yellow: #faf6af;
+  --beyonist-cream: #fffaf1;
+  --beyonist-paper: #ffffff;
+  --beyonist-ink: #171313;
+  --beyonist-muted: #716864;
+  background: var(--beyonist-cream);
+  color: var(--beyonist-ink);
+}
+
+.beyonist-storefront ::selection {
+  background: var(--beyonist-red);
+  color: white;
+}
+
+.beyonist-storefront main {
+  background-color: var(--beyonist-cream);
+}
+
+/* The newer editorial pass pushed page typography far beyond normal ecommerce
+   proportions. Public page-level hero/section headings are intentionally capped
+   while product/card typography remains untouched. */
+.beyonist-storefront .page-display {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(42px, 5vw, 72px);
+  font-weight: 400;
+  line-height: .95;
+  letter-spacing: -.045em;
+}
+
+.beyonist-storefront .section-display {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 4vw, 56px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -.035em;
+}
+
+.beyonist-storefront .store-card {
+  background: white;
+  border: 1px solid rgba(23,19,19,.11);
+  box-shadow: 0 14px 40px rgba(72,43,30,.055);
+}
+
+.beyonist-storefront .store-button-primary {
+  background: var(--beyonist-red);
+  color: white;
+  border: 1px solid var(--beyonist-red);
+  transition: transform .2s ease, background .2s ease, border-color .2s ease;
+}
+
+.beyonist-storefront .store-button-primary:hover {
+  background: var(--beyonist-ink);
+  border-color: var(--beyonist-ink);
+  transform: translateY(-1px);
+}
+
+.beyonist-storefront .store-button-secondary {
+  border: 1px solid rgba(23,19,19,.55);
+  color: var(--beyonist-ink);
+  transition: background .2s ease, color .2s ease;
+}
+
+.beyonist-storefront .store-button-secondary:hover {
+  background: var(--beyonist-ink);
+  color: white;
+}
+
+.beyonist-storefront .warm-product-surface {
+  background: linear-gradient(145deg, #fffbd0 0%, var(--beyonist-yellow) 100%);
+}
+
+/* Account dashboard is deliberately conventional ecommerce UI rather than an
+   abstract "module" interface. */
+.customer-dashboard-shell {
+  background: #f5efe6;
+}
+
+.customer-dashboard-shell .customer-panel {
+  background: white;
+  border: 1px solid rgba(23,19,19,.1);
+  box-shadow: 0 12px 36px rgba(64,42,30,.045);
+}
+
+@media (max-width: 700px) {
+  .beyonist-storefront .page-display { font-size: clamp(38px, 11vw, 56px); }
+  .beyonist-storefront .section-display { font-size: clamp(30px, 9vw, 44px); }
+}
+
+/* Lightweight shared entrance animations keep global chrome out of the Motion vendor bundle. */
+@keyframes headerFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes headerDropIn { from { opacity: 0; transform: translateY(-22px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes drawerSlideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes preloaderRingIn { from { opacity: 0; transform: translate(-50%, -50%) scale(.78); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+
+.beyonist-overlay-in { animation: headerFadeIn .2s ease-out both; }
+.beyonist-search-in { animation: headerDropIn .28s cubic-bezier(.22,1,.36,1) both; }
+.beyonist-drawer-in { animation: drawerSlideIn .32s cubic-bezier(.76,0,.24,1) both; }
+.beyonist-preloader-ring { animation: preloaderRingIn .28s cubic-bezier(.22,1,.36,1) both; }
+
+@keyframes beyonistFloatIn { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes beyonistReplyIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.beyonist-float-in { animation: beyonistFloatIn .22s ease-out both; }
+.beyonist-reply-in { animation: beyonistReplyIn .18s ease-out both; }
