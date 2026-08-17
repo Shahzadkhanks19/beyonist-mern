@@ -1,6 +1,6 @@
 /**
- * Express router for commerce routes. Defines HTTP endpoints, authorization boundaries,
- * validation, pricing orchestration, and lightweight checkout address assistance.
+ * Express router for commerce routes. Defines public pricing/settings endpoints and
+ * checkout address assistance. Pricing and order validation remain server-authoritative.
  */
 
 import { Router } from "express";
@@ -32,9 +32,8 @@ router.get("/settings", async (_req, res, next) => {
 });
 
 /**
- * GET /pincode/:postalCode
- * Provides address assistance only. Checkout still validates the submitted address
- * independently and never trusts this lookup as authorization or proof of delivery.
+ * Address-assistance lookup. This does not replace checkout validation; it only
+ * helps the customer fill district/city and state from a valid Indian PIN.
  */
 router.get("/pincode/:postalCode", async (req, res, next) => {
   try {
@@ -47,7 +46,7 @@ router.get("/pincode/:postalCode", async (req, res, next) => {
     const timeout = setTimeout(() => controller.abort(), PINCODE_TIMEOUT_MS);
     let response;
     try {
-      response = await fetch(`https://api.pincodeapi.in/api/v1/pincode/${postalCode}`, {
+      response = await fetch(`https://api.postalpincode.in/pincode/${postalCode}`, {
         signal: controller.signal,
         headers: { Accept: "application/json" },
       });
@@ -56,25 +55,26 @@ router.get("/pincode/:postalCode", async (req, res, next) => {
     }
 
     if (!response?.ok) {
-      return res.status(404).json({ success: false, code: "PINCODE_NOT_FOUND", message: "We could not locate that PIN code. You can still enter city and state manually." });
+      return res.status(404).json({ success: false, code: "PINCODE_NOT_FOUND", message: "We could not locate that PIN code. Enter city and state manually." });
     }
 
     const payload = await response.json().catch(() => null);
-    const offices = Array.isArray(payload?.data) ? payload.data : [];
-    const usable = offices.find((office) => office?.district && office?.statename) || offices[0];
+    const result = Array.isArray(payload) ? payload[0] : null;
+    const offices = Array.isArray(result?.PostOffice) ? result.PostOffice : [];
+    const usable = offices.find((office) => office?.District && office?.State) || offices[0];
 
-    if (!usable?.district || !usable?.statename) {
-      return res.status(404).json({ success: false, code: "PINCODE_NOT_FOUND", message: "We could not locate that PIN code. You can still enter city and state manually." });
+    if (String(result?.Status || "").toLowerCase() !== "success" || !usable?.District || !usable?.State) {
+      return res.status(404).json({ success: false, code: "PINCODE_NOT_FOUND", message: "We could not locate that PIN code. Enter city and state manually." });
     }
 
     return res.json({
       success: true,
       data: {
         postalCode,
-        city: String(usable.district).trim(),
-        district: String(usable.district).trim(),
-        state: String(usable.statename).trim(),
-        postOffice: String(usable.officename || "").trim(),
+        city: String(usable.District).trim(),
+        district: String(usable.District).trim(),
+        state: String(usable.State).trim(),
+        postOffice: String(usable.Name || "").trim(),
       },
     });
   } catch (error) {
@@ -99,18 +99,10 @@ router.post("/quote", async (req, res, next) => {
 
     let coupon = { valid: false, coupon: null, discountAmount: 0, message: "" };
     if (code) {
-      coupon = await validateCoupon({
-        code,
-        subtotal,
-        customerAccount: signedIn?.customer?._id || null,
-      });
+      coupon = await validateCoupon({ code, subtotal, customerAccount: signedIn?.customer?._id || null });
     }
 
-    const pricing = calculatePricing({
-      subtotal,
-      settings,
-      discountAmount: coupon.valid ? coupon.discountAmount : 0,
-    });
+    const pricing = calculatePricing({ subtotal, settings, discountAmount: coupon.valid ? coupon.discountAmount : 0 });
 
     return res.json({
       success: true,
