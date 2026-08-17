@@ -1,7 +1,11 @@
 {
   "rewrites": [
     {
-      "source": "/((?!assets/|brand/|images/|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)",
+      "source": "/api/:path*",
+      "destination": "https://beyonist-api.vercel.app/api/:path*"
+    },
+    {
+      "source": "/((?!api/|assets/|brand/|images/|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)",
       "destination": "/index.html"
     }
   ],
