@@ -7,7 +7,9 @@
 
 import { normalizeCmsMedia } from "../utils/productImagePath.js";
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
+const API_BASE = import.meta.env.PROD
+  ? "/api"
+  : (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
 
 /**
  * Implements the request operation used by this module.
