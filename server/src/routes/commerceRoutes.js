@@ -1,8 +1,6 @@
 /**
- * Express router for commerce routes. Defines HTTP endpoints, authorization boundaries, validation, and orchestration for this API area.
- *
- * Keep this module focused on its current responsibility; shared logic belongs in
- * contexts, services, hooks, or utilities rather than being duplicated here.
+ * Express router for commerce routes. Defines HTTP endpoints, authorization boundaries,
+ * validation, pricing orchestration, and lightweight checkout address assistance.
  */
 
 import { Router } from "express";
@@ -10,13 +8,12 @@ import { calculatePricing, getCommerceSettings, validateCoupon } from "../servic
 import { resolveCustomerSession } from "../services/customerSession.js";
 
 const router = Router();
-
-// API: GET /settings — handles the settings request and returns a normalized JSON response.
+const PINCODE_TIMEOUT_MS = 4500;
 
 router.get("/settings", async (_req, res, next) => {
   try {
     const settings = await getCommerceSettings();
-    res.json({
+    return res.json({
       success: true,
       data: {
         deliveryEnabled: settings.deliveryEnabled,
@@ -30,16 +27,73 @@ router.get("/settings", async (_req, res, next) => {
       },
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-// API: POST /quote — handles the quote request and returns a normalized JSON response.
+/**
+ * GET /pincode/:postalCode
+ * Provides address assistance only. Checkout still validates the submitted address
+ * independently and never trusts this lookup as authorization or proof of delivery.
+ */
+router.get("/pincode/:postalCode", async (req, res, next) => {
+  try {
+    const postalCode = String(req.params.postalCode || "").replace(/\D/g, "").slice(0, 6);
+    if (!/^\d{6}$/.test(postalCode)) {
+      return res.status(400).json({ success: false, code: "INVALID_PINCODE", message: "Enter a valid 6-digit PIN code." });
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), PINCODE_TIMEOUT_MS);
+    let response;
+    try {
+      response = await fetch(`https://api.pincodeapi.in/api/v1/pincode/${postalCode}`, {
+        signal: controller.signal,
+        headers: { Accept: "application/json" },
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!response?.ok) {
+      return res.status(404).json({ success: false, code: "PINCODE_NOT_FOUND", message: "We could not locate that PIN code. You can still enter city and state manually." });
+    }
+
+    const payload = await response.json().catch(() => null);
+    const offices = Array.isArray(payload?.data) ? payload.data : [];
+    const usable = offices.find((office) => office?.district && office?.statename) || offices[0];
+
+    if (!usable?.district || !usable?.statename) {
+      return res.status(404).json({ success: false, code: "PINCODE_NOT_FOUND", message: "We could not locate that PIN code. You can still enter city and state manually." });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        postalCode,
+        city: String(usable.district).trim(),
+        district: String(usable.district).trim(),
+        state: String(usable.statename).trim(),
+        postOffice: String(usable.officename || "").trim(),
+      },
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      return res.status(504).json({ success: false, code: "PINCODE_LOOKUP_TIMEOUT", message: "PIN lookup took too long. Enter city and state manually." });
+    }
+    return next(error);
+  }
+});
 
 router.post("/quote", async (req, res, next) => {
   try {
-    const subtotal = Math.max(Number(req.body?.subtotal) || 0, 0);
-    const code = String(req.body?.couponCode || "").trim();
+    const rawSubtotal = Number(req.body?.subtotal);
+    if (!Number.isFinite(rawSubtotal) || rawSubtotal < 0 || rawSubtotal > 10_000_000) {
+      return res.status(400).json({ success: false, code: "INVALID_SUBTOTAL", message: "Invalid cart subtotal." });
+    }
+
+    const subtotal = rawSubtotal;
+    const code = String(req.body?.couponCode || "").trim().toUpperCase().slice(0, 60);
     const signedIn = await resolveCustomerSession(req, { touch: false });
     const settings = await getCommerceSettings();
 
@@ -58,12 +112,12 @@ router.post("/quote", async (req, res, next) => {
       discountAmount: coupon.valid ? coupon.discountAmount : 0,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         ...pricing,
         coupon: code ? {
-          code: coupon.coupon?.code || code.toUpperCase(),
+          code: coupon.coupon?.code || code,
           valid: coupon.valid,
           message: coupon.message,
           discountType: coupon.coupon?.discountType || null,
@@ -72,7 +126,7 @@ router.post("/quote", async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
