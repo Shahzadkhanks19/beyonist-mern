@@ -5,7 +5,9 @@
  * contexts, services, hooks, or utilities rather than being duplicated here.
  */
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
+const API_BASE = import.meta.env.PROD
+  ? "/api"
+  : (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
 
 /**
  * Implements the request operation used by this module.
@@ -53,7 +55,6 @@ export function logoutCustomer() {
 export function getMe() {
   return request("/auth/me");
 }
-
 
 /**
  * Implements the forgot password operation used by this module.
